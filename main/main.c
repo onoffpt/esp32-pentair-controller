@@ -384,9 +384,13 @@ static void readRS485()
 
                         if (packet.src == MAIN && packet.dest == BROADCAST && packet.command == 0x02)
                         {
+                            int isequal = 0;
+
                             xSemaphoreTake(semMainStatus, portMAX_DELAY);
+                            isequal = memcmp(main_status, packet.data, sizeof(MAIN_STATUS_PACKET));
                             memcpy(main_status, packet.data, sizeof(MAIN_STATUS_PACKET));
                             xSemaphoreGive(semMainStatus);
+
                             //main_status = (MAIN_STATUS_PACKET *)packet.data;
                             ESP_LOGI(TAG, "Time:        %d:%d", main_status->hour, main_status->minute);
                             ESP_LOGI(TAG, "Pump1:       %s", str_state(PUMP1_STATE(main_status->equip1)));
@@ -402,10 +406,9 @@ static void readRS485()
                             ESP_LOGI(TAG, "Pool light:  %s", str_state(POOL_LIGHT_STATE(main_status->equip1)));
                             ESP_LOGI(TAG, "Spa light:   %s\n", str_state(SPA_LIGHT_STATE(main_status->equip1)));
 
-                            // send the info to the mqtt broker
-                            if (mqtt_connected)
+                            // send the info to the mqtt broker if changed (the times changes once per minute).
+                            if (mqtt_connected && isequal != 0)
                             {
-                                // TODO - don't send updates if values haven't changed
                                 sprintf(mqtt_data, "%d", main_status->pool_temp);
                                 esp_mqtt_client_publish(client, STATE(MQTT_POOL_TEMPERATURE_TOPIC), mqtt_data, 0, MQTT_QOS, MQTT_RETAIN);
                                 sprintf(mqtt_data, "%d", main_status->air_temp);
