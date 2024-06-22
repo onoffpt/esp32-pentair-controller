@@ -46,6 +46,7 @@ esp_mqtt_client_handle_t client;
 #define MQTT_SPA_TOPIC "homeassistant/switch/pool/spa"
 #define MQTT_POOL_CLEANER_TOPIC "homeassistant/switch/pool/cleaner"
 #define MQTT_AIR_BLOWER_TOPIC "homeassistant/switch/pool/air_blower"
+#define MQTT_SOLAR_TEMPERATURE_TOPIC "homeassistant/sensor/pool/solar_temperature"
 #define MQTT_SPA_LIGHT_TOPIC "homeassistant/switch/pool/spa_light"
 #define MQTT_POOL_LIGHT_TOPIC "homeassistant/switch/pool/pool_light"
 #define MQTT_POOL_TOPIC "homeassistant/switch/pool/pool"
@@ -399,6 +400,7 @@ static void readRS485()
                             ESP_LOGI(TAG, "Pool temp:   %d", main_status->pool_temp);
                             ESP_LOGI(TAG, "Spa temp:    %d", main_status->spa_temp);
                             ESP_LOGI(TAG, "Air temp:    %d", main_status->air_temp);
+                            ESP_LOGI(TAG, "Solar temp:  %d", main_status->solar_temp);
                             ESP_LOGI(TAG, "Heater:      %d", main_status->heater_active);
                             ESP_LOGI(TAG, "Heater mode: %d", main_status->heater_mode);
                             ESP_LOGI(TAG, "Unknown:     %d", main_status->unknown);
@@ -413,6 +415,8 @@ static void readRS485()
                                 esp_mqtt_client_publish(client, STATE(MQTT_POOL_TEMPERATURE_TOPIC), mqtt_data, 0, MQTT_QOS, MQTT_RETAIN);
                                 sprintf(mqtt_data, "%d", main_status->air_temp);
                                 esp_mqtt_client_publish(client, STATE(MQTT_AIR_TEMPERATURE_TOPIC), mqtt_data, 0, MQTT_QOS, MQTT_RETAIN);
+                                sprintf(mqtt_data, "%d", main_status->solar_temp);
+                                esp_mqtt_client_publish(client, STATE(MQTT_SOLAR_TEMPERATURE_TOPIC), mqtt_data, 0, MQTT_QOS, MQTT_RETAIN);
                                 esp_mqtt_client_publish(client, STATE(MQTT_SPA_TOPIC), str_state(SPA_STATE(main_status->equip1)), 0, MQTT_QOS, MQTT_RETAIN);
                                 esp_mqtt_client_publish(client, STATE(MQTT_POOL_CLEANER_TOPIC), str_state(CLEANER_STATE(main_status->equip1)), 0, MQTT_QOS, MQTT_RETAIN);
                                 esp_mqtt_client_publish(client, STATE(MQTT_AIR_BLOWER_TOPIC), str_state(AIR_BLOWER_STATE(main_status->equip1)), 0, MQTT_QOS, MQTT_RETAIN);
@@ -473,6 +477,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         esp_mqtt_client_publish(client, CONFIG(MQTT_SPILLWAY_TOPIC), "{\"unique_id\": \"pool_spillway\", \"name\": \"Pool: Spillway\", \"state_topic\": \"homeassistant/switch/pool/spillway/state\", \"command_topic\": \"homeassistant/switch/pool/spillway/set\", \"state_on\": \"on\", \"state_off\": \"off\", \"payload_on\": \"on\", \"payload_off\": \"off\"}", 0, MQTT_HA_DISCOVERY_QOS, MQTT_HA_DISCOVERY_RETAIN);
         esp_mqtt_client_publish(client, CONFIG(MQTT_POOL_TEMPERATURE_TOPIC), "{\"unique_id\": \"pool_pool_temperature\", \"name\": \"Pool: Pool Temperature\", \"device_class\": \"temperature\", \"state_topic\": \"homeassistant/sensor/pool/pool_temperature/state\", \"unit_of_measurement\": \"°F\"}", 0, MQTT_HA_DISCOVERY_QOS, MQTT_HA_DISCOVERY_RETAIN);
         esp_mqtt_client_publish(client, CONFIG(MQTT_AIR_TEMPERATURE_TOPIC), "{\"unique_id\": \"pool_air_temperature\", \"name\": \"Pool: Air Temperature\", \"device_class\": \"temperature\", \"state_topic\": \"homeassistant/sensor/pool/air_temperature/state\", \"unit_of_measurement\": \"°F\"}", 0, MQTT_HA_DISCOVERY_QOS, MQTT_HA_DISCOVERY_RETAIN);
+        esp_mqtt_client_publish(client, CONFIG(MQTT_SOLAR_TEMPERATURE_TOPIC),  "{\"unique_id\": \"pool_solar_temperature\", \"name\": \"Pool: Solar Temperature\", \"device_class\": \"temperature\", \"state_topic\": \"homeassistant/sensor/pool/solar_temperature/state\", \"unit_of_measurement\": \"°F\"}", 0, MQTT_HA_DISCOVERY_QOS, MQTT_HA_DISCOVERY_RETAIN);
         mqtt_connected = true;
         break;
 
